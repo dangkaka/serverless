@@ -1,0 +1,53 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: serverless
+
+frameworkVersion: ">=1.28.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: go1.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'ap-southeast-1'} 
+  logRetentionInDays: 90
+  tags:
+    team: dang.nguyen
+  environment:
+    env: ${self:provider.stage}
+package:
+ exclude:
+   - ./**
+ include:
+   - ./bin/**
+
+functions:
+  kinesis-demo:
+    handler: bin/kinesis-demo
+    name: serverless-${self:provider.stage}-kinesis-demo
+    description: kinesis demo
+    memorySize: 128
+    timeout: 900
+    events:
+      - stream:
+          arn:
+            'Fn::Join':
+              - ':'
+              -
+                - arn:aws:kinesis:${self:provider.region}
+                - Ref: 'AWS::AccountId'
+                - stream/kinesis-${self:provider.stage}-demo
+          type: kinesis
+          batchSize: 100
+          startingPosition: LATEST
+          enabled: true
